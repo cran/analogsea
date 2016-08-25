@@ -37,6 +37,7 @@
 #' browser.
 #' @param ssh_user (character) User account for ssh commands against droplet. Default: root
 #' @param add_users (logical) Add users or not when installing RStudio server. Default: FALSE
+#' @param path (character) Path to a directory with Shiny app files
 #' @examples
 #' \dontrun{
 #' d <- docklet_create()
@@ -59,6 +60,20 @@
 #' ## following pattern user1/user1 ... through 100
 #' d <- docklet_create()
 #' d %>% docklet_rstudio() %>% docklet_rstudio_addusers()
+#'
+#' # Spin up a Shiny server (opens in default browser)
+#' (d <- docklet_create())
+#' d %>% docklet_shinyserver()
+#' docklet_create() %>% docklet_shinyserver()
+#'
+#' # Spin up a Shiny server with an app (opens in default browser)
+#' d <- docklet_create()
+#' path <- system.file("examples", "widgets", package = "analogsea")
+#' d %>% docklet_shinyapp(path)
+#' ## uploading more apps - use droplet_upload, then navigate in browser
+#' ### if you try to use docklet_shinyapp again on the same droplet, it will error
+#' path2 <- system.file("examples", "mpg", package = "analogsea")
+#' d %>% droplet_upload(path2, "/srv/shinyapps/mpg") # then go to browser
 #' }
 docklet_create <- function(name = random_name(),
                            size = getOption("do_size", "1gb"),
@@ -79,7 +94,8 @@ docklet_create <- function(name = random_name(),
     backups = backups,
     ipv6 = ipv6,
     private_networking = private_networking,
-    wait = wait
+    wait = wait,
+    ...
   )
 }
 
@@ -196,8 +212,51 @@ docklet_rstudio_addusers <- function(droplet,
   )
 }
 
-cn <- function(x, y) if (nchar(y) == 0) y else paste0(x, y)
+#' @export
+#' @rdname docklet_create
+docklet_shinyserver <- function(droplet,
+                            img = 'rocker/shiny',
+                            port = '3838',
+                            volume = '',
+                            dir = '',
+                            browse = TRUE,
+                            ssh_user = "root") {
+  droplet <- as.droplet(droplet)
 
-strExtract <- function(str, pattern) regmatches(str, regexpr(pattern, str))
+  docklet_pull(droplet, img, ssh_user)
+  docklet_run(droplet,
+              " -d",
+              " -p ", port, ":3838",
+              cn(" -v ", volume),
+              cn(" -w", dir),
+              " ",
+              img,
+              ssh_user = ssh_user
+  )
 
-strTrim <- function(str) gsub("^\\s+|\\s+$", "", str)
+  url <- sprintf("http://%s:%s/", droplet_ip(droplet), port)
+  if (browse) {
+    Sys.sleep(4) # give Rstudio Shiny Server a few seconds to start up
+    browseURL(url)
+  }
+
+  invisible(url)
+}
+
+#' @export
+#' @rdname docklet_create
+docklet_shinyapp <- function(droplet,
+                             path,
+                             img = 'rocker/shiny',
+                             port = '80',
+                             dir = '',
+                             browse = TRUE,
+                             ssh_user = "root") {
+  droplet <- as.droplet(droplet)
+  # move files to server
+  droplet_ssh(droplet, "mkdir -p /srv/shinyapps")
+  droplet_upload(droplet, path, paste0("/srv/shinyapps/", basename(path)))
+  # spin up shiny server
+  docklet_shinyserver(droplet, img, port, volume = '/srv/shinyapps/:/srv/shiny-server/',
+                      dir, browse, ssh_user)
+}

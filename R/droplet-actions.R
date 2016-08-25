@@ -4,8 +4,12 @@
 #' parameter is possible: simply specify the name of the droplet and your'e up and running.
 #'
 #' @export
-#' @param name (character) Name of the droplet. Default: picks a random name
-#'   from \code{\link{words}} if none supplied.
+#' @param name (character) Name of the droplet. The human-readable string you
+#'   wish to use when displaying the Droplet name. The name, if set to a domain
+#'   name managed in the DigitalOcean DNS management system, will configure a PTR
+#'   record for the Droplet. The name set during creation will also determine
+#'   the hostname for the Droplet in its internal configuration. Default: picks
+#'   a random name from \code{\link{words}} if none supplied.
 #' @param size (character) Size slug identifier. See \code{\link{sizes}()} for
 #'   a complete list. Default: 512mb, the smallest
 #' @param image (character/numeric) The image ID of a public or private image,
@@ -36,11 +40,21 @@
 #'   use security best practices (disabling root log-in, security autoupdates)
 #'   to make it harder to hack your droplet.
 #' @param wait If \code{TRUE} (default), wait until droplet has been initialised and
-#'   is ready for use.
+#'   is ready for use. If set to \code{FALSE} we return a droplet object right away
+#'   after droplet creation request has been sent. Note that there won't be an IP
+#'   address in the object yet. Note that waiting means we ping the DigitalOcean
+#'   API to check on the status of your droplet, which uses up your API requests.
+#'   The option \code{do.wait_time} can be set to any positive integer to
+#'   determine how many seconds between pings. The default is 1 sec. Note that if
+#'   you are creating droplets in a loop, parallel or otherwise, set
+#'   \code{do.wait_time} within the loop instead of outside of it.
+#'
 #' @param ... Additional options passed down to \code{\link[httr]{POST}}
 #'
 #' @details Note that if you exit the R session or kill the function call after it's
 #' in waiting process (the string of ...), the droplet creation will continue.
+#'
+#' @return A droplet object
 #'
 #' @examples \dontrun{
 #' droplet_create()
@@ -79,25 +93,26 @@ droplet_create <- function(name = random_name(),
   }
 
   res <- do_POST('droplets',
-    body = list(
-      name = unbox(name),
-      size = unbox(size),
-      image = unbox(image),
-      region = unbox(region),
-      ssh_keys = I(ssh_keys),
-      backups = unbox(backups),
-      ipv6 = unbox(ipv6),
-      private_networking = unbox(private_networking),
-      user_data = unbox(user_data)
-    ), ...
+                 body = list(
+                   name = unbox(name),
+                   size = unbox(size),
+                   image = unbox(image),
+                   region = unbox(region),
+                   ssh_keys = I(ssh_keys),
+                   backups = unbox(backups),
+                   ipv6 = unbox(ipv6),
+                   private_networking = unbox(private_networking),
+                   user_data = unbox(user_data)
+                 ), ...
   )
   droplet <- droplet(res$droplet$id)
 
   message("NB: This costs $", droplet$size$price_hourly, " / hour ",
-    "until you droplet_delete() it")
+          "until you droplet_delete() it")
 
   if (wait) {
     droplet_wait(droplet)
+    droplet
   } else {
     droplet
   }
@@ -146,6 +161,7 @@ droplet_wait <- function(droplet) {
 #' @export
 #' @param droplet A droplet, or something that can be coerced to a droplet by
 #'   \code{\link{as.droplet}}.
+#' @param tag (character) Name of a tag. optional
 #' @param ... Additional options passed down to low-level API method.
 #' @examples
 #' \dontrun{
@@ -159,10 +175,23 @@ droplet_wait <- function(droplet) {
 #'
 #' # Delete all droplets
 #' lapply(droplets(), droplet_delete)
+#'
+#' # delete droplets by tag
+#' ## first, create a tag, then a droplet, then tag it
+#' tag_create(name = "foobar")
+#' e <- droplet_create()
+#' tag_resource(name = "foobar", resource_id = e$id)
+#' droplets(tag = "foobar")
+#' ## then delete the droplet by tag name
+#' droplet_delete(tag = "foobar")
 #' }
-droplet_delete <- function(droplet, ...) {
-  droplet <- as.droplet(droplet)
-  do_DELETE(sprintf('droplets/%s', droplet$id), ...)
+droplet_delete <- function(droplet = NULL, tag = NULL, ...) {
+  if (!is.null(droplet)) {
+    droplet <- as.droplet(droplet)
+    do_DELETE(sprintf('droplets/%s', droplet$id), ...)
+  } else {
+    do_DELETE('droplets', query = ascompact(list(tag_name = tag)), ...)
+  }
 }
 
 
@@ -194,6 +223,11 @@ droplet_delete <- function(droplet, ...) {
 #' d <- droplets()
 #' d[[1]] %>% droplet_reboot()
 #' d[[2]] %>% droplet_power_cycle()
+#'
+#' d <- droplet_create()
+#' d %>% summary
+#' d %>% droplet_enable_backups()
+#' d %>% summary
 #' }
 #' @name droplet_action
 NULL
@@ -244,6 +278,12 @@ droplet_enable_ipv6 <- function(droplet, ...) {
 #' @rdname droplet_action
 droplet_enable_private_networking <- function(droplet, ...) {
   droplet_action("enable_private_networking", droplet, ...)
+}
+
+#' @export
+#' @rdname droplet_action
+droplet_enable_backups <- function(droplet, ...) {
+  droplet_action("enable_backups", droplet, ...)
 }
 
 #' @export

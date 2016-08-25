@@ -9,20 +9,21 @@
 #' should be one of the easiest options.
 #'
 #' You need to authenticate to use this package. Get your auth token at
-#' https://cloud.digitalocean.com/settings/applications. See \code{\link{do_oauth}}
+#' https://cloud.digitalocean.com/settings/api/tokens - See \code{\link{do_oauth}}
 #' for more on authentication.
 #'
 #' @importFrom stats setNames
 #' @importFrom utils browseURL read.csv
 #' @importFrom jsonlite fromJSON unbox
-#' @importFrom httr HEAD GET POST add_headers oauth_endpoint oauth2.0_token config oauth_app
-#' stop_for_status content status_code headers
+#' @importFrom httr VERB HEAD GET POST add_headers oauth_endpoint oauth2.0_token
+#' config oauth_app stop_for_status content status_code headers
 #' @importFrom yaml yaml.load_file as.yaml
 #' @name analogsea-package
 #' @aliases analogsea
 #' @author Scott Chamberlain \email{myrmecocystus@@gmail.com}
 #' @author Hadley Wickham \email{hadley@@rstudio.com}
 #' @author Winston Chang \email{winston@@stdout.org}
+#' @author Bob Rudis \email{bob@@rudis.net}
 #' @docType package
 #' @keywords package
 NULL

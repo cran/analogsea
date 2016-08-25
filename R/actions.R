@@ -66,17 +66,27 @@ is_complete <- function(x) {
 action_wait <- function(x) {
   if (is_complete(x)) return(droplet(x$resource_id))
 
+  wait_time <- getOption("do.wait_time", 1)
+  if (wait_time < 1) wait_time <- 1
   cat("Waiting for ", x$type, " ", sep = "")
-  while(!is_complete(x)) {
+  while (!is_complete(x)) {
     x <- action_refresh(x)
-    Sys.sleep(1)
+    Sys.sleep(wait_time)
     cat('.')
   }
   cat("\n")
 
-  droplet(x$resource_id)
+  droplet_refresh(droplet(x$resource_id))
 }
 
+droplet_refresh <- function(x) {
+  ip <- "likely"
+  while (grepl("likely", ip)) {
+    x <- droplet(x$id)
+    ip <- droplet_ip_safe(x)
+  }
+  x
+}
 
 action_refresh <- function(action) {
   action <- as.action(action)
