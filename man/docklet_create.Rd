@@ -20,7 +20,7 @@ docklet_create(name = random_name(), size = getOption("do_size", "1gb"),
   ssh_keys = getOption("do_ssh_keys", NULL),
   backups = getOption("do_backups", NULL), ipv6 = getOption("do_ipv6",
   NULL), private_networking = getOption("do_private_networking", NULL),
-  wait = TRUE, image = "docker", ...)
+  tags = NULL, wait = TRUE, image = "docker", ...)
 
 docklet_ps(droplet, all = TRUE, ssh_user = "root")
 
@@ -54,10 +54,10 @@ docklet_shinyapp(droplet, path, img = "rocker/shiny", port = "80",
 \arguments{
 \item{name}{(character) Name of the droplet. The human-readable string you
 wish to use when displaying the Droplet name. The name, if set to a domain
-name managed in the DigitalOcean DNS management system, will configure a PTR
-record for the Droplet. The name set during creation will also determine
-the hostname for the Droplet in its internal configuration. Default: picks
-a random name from \code{\link{words}} if none supplied.}
+name managed in the DigitalOcean DNS management system, will configure a
+PTR record for the Droplet. The name set during creation will also
+determine the hostname for the Droplet in its internal configuration.
+Default: picks a random name from \code{\link{words}} if none supplied.}
 
 \item{size}{(character) Size slug identifier. See \code{\link{sizes}()} for
 a complete list. Default: 512mb, the smallest}
@@ -81,17 +81,22 @@ Default: FALSE}
 droplet.}
 
 \item{private_networking}{(logical) Use private networking. Private
-networking is currently only available in certain regions. Default: FALSE}
+networking is currently only available in certain regions.
+Default: \code{FALSE}}
 
-\item{wait}{If \code{TRUE} (default), wait until droplet has been initialised and
-is ready for use. If set to \code{FALSE} we return a droplet object right away
-after droplet creation request has been sent. Note that there won't be an IP
-address in the object yet. Note that waiting means we ping the DigitalOcean
-API to check on the status of your droplet, which uses up your API requests.
-The option \code{do.wait_time} can be set to any positive integer to
-determine how many seconds between pings. The default is 1 sec. Note that if
-you are creating droplets in a loop, parallel or otherwise, set
-\code{do.wait_time} within the loop instead of outside of it.}
+\item{tags}{(character) A vector of tag names to apply to the Droplet after
+it is created. Tag names can either be existing or new tags.}
+
+\item{wait}{If \code{TRUE} (default), wait until droplet has been
+initialised and is ready for use. If set to \code{FALSE} we return a
+droplet object right away after droplet creation request has been sent.
+Note that there won't be an IP address in the object yet. Note that
+waiting means we ping the DigitalOcean API to check on the status of your
+droplet, which uses up your API requests. The option \code{do.wait_time}
+can be set to any positive integer to determine how many seconds between
+pings. The default is 1 sec. Note that if you are creating droplets in a
+loop, parallel or otherwise, set \code{do.wait_time} within the loop
+instead of outside of it.}
 
 \item{image}{(character/numeric) The image ID of a public or private image,
 or the unique slug identifier for a public image. This image will be the
@@ -99,15 +104,16 @@ base image for your droplet. See \code{\link{images}()} for a complete
 list. Default: ubuntu-14-04-x64}
 
 \item{...}{For \code{docklet_create}, additional options passed down to
-\code{\link[httr]{POST}}. For \code{docklet_run}, additional arguments combined
-and applied to docker statement.}
+\code{\link[httr]{POST}}. For \code{docklet_run}, additional arguments
+combined and applied to docker statement.}
 
 \item{droplet}{A droplet, or something that can be coerced to a droplet by
 \code{\link{as.droplet}}.}
 
 \item{all}{(logical) List all containers. Default: \code{TRUE}}
 
-\item{ssh_user}{(character) User account for ssh commands against droplet. Default: root}
+\item{ssh_user}{(character) User account for ssh commands against droplet.
+Default: root}
 
 \item{repo}{(character) Docker name, can be local to the Droplet or remote,
 e.g., \code{rocker/rstudio}}
@@ -142,7 +148,8 @@ to be unique)}
 \item{browse}{(logical) If \code{TRUE}, open RStudio instance in your default
 browser.}
 
-\item{add_users}{(logical) Add users or not when installing RStudio server. Default: FALSE}
+\item{add_users}{(logical) Add users or not when installing RStudio server.
+Default: FALSE}
 
 \item{path}{(character) Path to a directory with Shiny app files}
 }
@@ -186,5 +193,8 @@ d \%>\% docklet_shinyapp(path)
 path2 <- system.file("examples", "mpg", package = "analogsea")
 d \%>\% droplet_upload(path2, "/srv/shinyapps/mpg") # then go to browser
 }
+}
+\seealso{
+\code{\link{docklets_create}}
 }
 
