@@ -2,17 +2,17 @@
 % Please edit documentation in R/docklet.R
 \name{docklet_create}
 \alias{docklet_create}
-\alias{docklet_docker}
-\alias{docklet_images}
 \alias{docklet_ps}
+\alias{docklet_images}
 \alias{docklet_pull}
+\alias{docklet_run}
+\alias{docklet_stop}
 \alias{docklet_rm}
+\alias{docklet_docker}
 \alias{docklet_rstudio}
 \alias{docklet_rstudio_addusers}
-\alias{docklet_run}
-\alias{docklet_shinyapp}
 \alias{docklet_shinyserver}
-\alias{docklet_stop}
+\alias{docklet_shinyapp}
 \title{Docklets: docker on droplets.}
 \usage{
 docklet_create(name = random_name(), size = getOption("do_size", "1gb"),
@@ -20,11 +20,11 @@ docklet_create(name = random_name(), size = getOption("do_size", "1gb"),
   ssh_keys = getOption("do_ssh_keys", NULL),
   backups = getOption("do_backups", NULL), ipv6 = getOption("do_ipv6",
   NULL), private_networking = getOption("do_private_networking", NULL),
-  tags = NULL, wait = TRUE, image = "docker", ...)
+  tags = list(), wait = TRUE, image = "docker", ...)
 
 docklet_ps(droplet, all = TRUE, ssh_user = "root")
 
-docklet_images(droplet, ssh_user = "root")
+docklet_images(droplet, all = TRUE, ssh_user = "root")
 
 docklet_pull(droplet, repo, ssh_user = "root")
 
@@ -70,7 +70,7 @@ Default: sfo1}
 vector of key ids, or NULL, to use all keys in your account. Accounts
 with the corresponding private key will be able to log in to the droplet.
 See \code{\link{keys}()} for a list of the keys that you've added.
-Default: NULL.}
+Default: NULL}
 
 \item{backups}{(logical) Enable backups. A boolean indicating whether
 automated backups should be enabled for the droplet. Automated backups can
@@ -85,7 +85,8 @@ networking is currently only available in certain regions.
 Default: \code{FALSE}}
 
 \item{tags}{(character) A vector of tag names to apply to the Droplet after
-it is created. Tag names can either be existing or new tags.}
+it is created. Tag names can either be existing or new tags.
+Default: list()}
 
 \item{wait}{If \code{TRUE} (default), wait until droplet has been
 initialised and is ready for use. If set to \code{FALSE} we return a
@@ -110,7 +111,7 @@ combined and applied to docker statement.}
 \item{droplet}{A droplet, or something that can be coerced to a droplet by
 \code{\link{as.droplet}}.}
 
-\item{all}{(logical) List all containers. Default: \code{TRUE}}
+\item{all}{(logical) List all containers or images. Default: \code{TRUE}}
 
 \item{ssh_user}{(character) User account for ssh commands against droplet.
 Default: root}
@@ -153,19 +154,43 @@ Default: FALSE}
 
 \item{path}{(character) Path to a directory with Shiny app files}
 }
+\value{
+all functions return a droplet
+}
 \description{
 Docklets: docker on droplets.
 }
+\section{URLs}{
+
+If you need to figure out the URL for your RStudio or Shiny server
+instance, you can construct like \code{http://<ip address>:<port>} where
+IP address can most likely be found like \code{d$networks$v4[[1]]$ip_address}
+and the port is the port you set in the function call.
+}
+
 \examples{
 \dontrun{
 d <- docklet_create()
-d \%>\%
-  docklet_pull("eddelbuettel/ubuntu-r-base") \%>\%
-  docklet_images()
+d \%>\% docklet_pull("dockerpinata/sqlite")
 d \%>\% docklet_images()
 
-d \%>\% docklet_run("eddelbuettel/ubuntu-r-base", "R --version", rm = TRUE)
+# sqlite
+d \%>\% docklet_run("dockerpinata/sqlite", "sqlite3 --version", rm = TRUE)
 d \%>\% docklet_ps()
+
+# cowsay
+d \%>\% docklet_pull("chuanwen/cowsay")
+d \%>\% docklet_run("chuanwen/cowsay", rm = TRUE)
+
+# docker images
+d \%>\% docklet_images()
+
+# install various R versions via Rocker
+d \%>\% docklet_pull("rocker/r-base")
+d \%>\% docklet_pull("rocker/r-devel")
+d \%>\% docklet_pull("rocker/r-ver:3.2")
+d \%>\% docklet_run("rocker/r-ver:3.2", "R --version", rm = TRUE)
+d \%>\% docklet_run("rocker/r-ver:3.2", "Rscript -e '2 + 3'", rm = TRUE)
 
 # Run a docklet containing rstudio
 d \%>\% docklet_rstudio()
@@ -197,4 +222,3 @@ d \%>\% droplet_upload(path2, "/srv/shinyapps/mpg") # then go to browser
 \seealso{
 \code{\link{docklets_create}}
 }
-

@@ -13,7 +13,7 @@
 #' @inheritParams droplet_create
 #' @param droplet A droplet, or something that can be coerced to a droplet by
 #'   \code{\link{as.droplet}}.
-#' @param all (logical) List all containers. Default: \code{TRUE}
+#' @param all (logical) List all containers or images. Default: \code{TRUE}
 #' @param repo (character) Docker name, can be local to the Droplet or remote,
 #' e.g., \code{rocker/rstudio}
 #' @param rm (logical) Automatically remove the container when it exits.
@@ -42,16 +42,38 @@
 #' Default: FALSE
 #' @param path (character) Path to a directory with Shiny app files
 #' @seealso \code{\link{docklets_create}}
+#'
+#' @return all functions return a droplet
+#'
+#' @section URLs:
+#' If you need to figure out the URL for your RStudio or Shiny server
+#' instance, you can construct like \code{http://<ip address>:<port>} where
+#' IP address can most likely be found like \code{d$networks$v4[[1]]$ip_address}
+#' and the port is the port you set in the function call.
+#'
 #' @examples
 #' \dontrun{
 #' d <- docklet_create()
-#' d %>%
-#'   docklet_pull("eddelbuettel/ubuntu-r-base") %>%
-#'   docklet_images()
+#' d %>% docklet_pull("dockerpinata/sqlite")
 #' d %>% docklet_images()
 #'
-#' d %>% docklet_run("eddelbuettel/ubuntu-r-base", "R --version", rm = TRUE)
+#' # sqlite
+#' d %>% docklet_run("dockerpinata/sqlite", "sqlite3 --version", rm = TRUE)
 #' d %>% docklet_ps()
+#'
+#' # cowsay
+#' d %>% docklet_pull("chuanwen/cowsay")
+#' d %>% docklet_run("chuanwen/cowsay", rm = TRUE)
+#'
+#' # docker images
+#' d %>% docklet_images()
+#'
+#' # install various R versions via Rocker
+#' d %>% docklet_pull("rocker/r-base")
+#' d %>% docklet_pull("rocker/r-devel")
+#' d %>% docklet_pull("rocker/r-ver:3.2")
+#' d %>% docklet_run("rocker/r-ver:3.2", "R --version", rm = TRUE)
+#' d %>% docklet_run("rocker/r-ver:3.2", "Rscript -e '2 + 3'", rm = TRUE)
 #'
 #' # Run a docklet containing rstudio
 #' d %>% docklet_rstudio()
@@ -87,7 +109,7 @@ docklet_create <- function(name = random_name(),
                            ipv6 = getOption("do_ipv6", NULL),
                            private_networking =
                              getOption("do_private_networking", NULL),
-                           tags = NULL,
+                           tags = list(),
                            wait = TRUE,
                            image = "docker",
                            ...) {
@@ -114,8 +136,8 @@ docklet_ps <- function(droplet, all = TRUE, ssh_user = "root") {
 
 #' @export
 #' @rdname docklet_create
-docklet_images <- function(droplet, ssh_user = "root") {
-  docklet_docker(droplet, "images", ssh_user = ssh_user)
+docklet_images <- function(droplet, all = TRUE, ssh_user = "root") {
+  docklet_docker(droplet, "images", if (all) "-a", ssh_user = ssh_user)
 }
 
 #' @export
@@ -153,7 +175,7 @@ docklet_rm <- function(droplet, container, ssh_user = "root") {
 #' @rdname docklet_create
 docklet_docker <- function(droplet, cmd, args = NULL, docker_args = NULL,
                            ssh_user = "root") {
-  args <- paste(args, collapse = "")
+  args <- paste(args, collapse = " ")
   droplet_ssh(
     droplet,
     user = ssh_user,
@@ -194,7 +216,7 @@ docklet_rstudio <- function(droplet,
     browseURL(url)
   }
 
-  invisible(url)
+  invisible(droplet)
 }
 
 #' @export
@@ -252,7 +274,7 @@ docklet_shinyserver <- function(droplet,
     browseURL(url)
   }
 
-  invisible(url)
+  invisible(droplet)
 }
 
 #' @export
