@@ -1,11 +1,59 @@
-spaces_base <- "nyc3.digitaloceanspaces.com"
+spaces_base <- "digitaloceanspaces.com"
+
+#' DigitalOcean Spaces
+#'
+#' DigitalOcean provides support for storing files (Objects) in Spaces. This is
+#' useful for storing related files for fast access, sharing, etc. See
+#' https://developers.digitalocean.com/documentation/spaces/
+#' for more information.
+#'
+#' In order to get started using the Spaces API, you'll need to generate a new
+#' "Spaces access key" in the API section of your DigitalOcean control panel and
+#' set the key and its secret as environmental variables via
+#' \code{\link{Sys.setenv}}. Set the access key to \code{DO_SPACES_ACCESS_KEY}
+#' and its secret to \code{DO_SPACES_SECRET_KEY}. After that, set your region to
+#' \code{DO_SPACES_REGION} (e.g., nyc3). Alternatively, you can pass this
+#' information as arguments to whichever Spaces API functions you're using.
+#'
+#' @param space A Space, or the name of the Space as a string.
+#' @param object (character) The name of the Object
+#'
+#' @name spaces_info
+#'
+#' @examples \dontrun{
+#' # List Spaces
+#' spaces()
+#'
+#' # Obtain Spaces as a list of Space objects
+#' res <- spaces()
+#'
+#' # Print Space summary using a Space object
+#' summary(res[["my_space_name"]])
+#'
+#' # Create a new space
+#' space_create("new_space_name")
+#' }
+#'
+NULL
+
+check_space_region <- function(spaces_region) {
+  tmp <- ifelse(is.null(spaces_region),
+                Sys.getenv("DO_SPACES_REGION"),
+                spaces_region)
+  if (tmp == "") {
+    stop("Need a digital ocean spaces region in your session. e.g. Sys.setenv(\"DO_SPACES_REGION\"=\"nyc3\")",
+         call. = FALSE)
+  } else {
+    tmp
+  }
+}
 
 check_space_access <- function(spaces_key) {
   tmp <- ifelse(is.null(spaces_key),
                 Sys.getenv("DO_SPACES_ACCESS_KEY"),
                 spaces_key)
   if (tmp == "") {
-    stop("Need a digital ocean spaces access key defined in your session",
+    stop("Need a digital ocean spaces access key defined in your session. e.g. Sys.setenv(\"DO_SPACES_ACCESS_KEY\"=\"{YOUR_KEY}\")",
          call. = FALSE)
   } else {
     tmp
@@ -17,21 +65,58 @@ check_space_secret <- function(spaces_secret) {
                 Sys.getenv("DO_SPACES_SECRET_KEY"),
                 spaces_secret)
   if (tmp == "") {
-    stop("Need a digital ocean spaces secret key defined in your session",
+    stop("Need a digital ocean spaces secret key defined in your session. e.g. Sys.setenv(\"DO_SPACES_SECRET_KEY\"=\"{YOUR_SECRET}\")",
          call. = FALSE)
   } else {
     tmp
   }
 }
 
+#' List all Spaces.
+#' @template spaces_args
+#' @param ... Additional arguments to \code{\link{spaces_GET}}
+#' @return (list)  A list of Spaces. Can be empty.
+#' @export
+#' @references https://developers.digitalocean.com/documentation/spaces/#get-object
+#' @examples
+#' \dontrun{
+#' # List all of your Spaces
+#' spaces()
+#' }
+spaces <- function(spaces_region = NULL,
+                   spaces_key = NULL,
+                   spaces_secret = NULL, ...) {
+  res <- spaces_GET(spaces_region = spaces_region,
+                    spaces_key = spaces_key,
+                    spaces_secret = spaces_secret,
+                    ...)
+
+  # when only one space is present, res$Buckets only contains the Name and
+  # CreationDate.  If more than one space is present, then each space will
+  # have a Bucket list object with the Name and CreationDate
+  if (identical(names(res$Buckets), c("Name", "CreationDate"))) {
+    res$Buckets <- list(
+      Bucket = list(
+        Name = res$Buckets$Name,
+        CreationDate = res$Buckets$CreationDate
+      )
+    )
+  }
+  sp <- lapply(res$Buckets, structure, class = "space")
+  setNames(sp, vapply(res$Buckets, function(x) x$Name, character(1)))
+}
+
+#' Coerce an object to a \code{space}
+#'
 #' @param x Object to coerce to a space
 #' @export
-#' @rdname spaces
 as.space <- function(x) UseMethod("as.space")
 #' @export
 as.space.space <- function(x) x
 #' @export
 as.space.character <- function(x) spaces()[[x]]
+#' @export
+as.character.space <- function (x, ...) x$Name
 
 #' @export
 print.space <- function(x, ...) {
@@ -55,89 +140,51 @@ summary.space <- function(object, ...) {
   cat("  Created at:   ", object$CreationDate, "\n", sep = "")
 }
 
-#' Spaces storage operations
+#' Internal helper method to get information about a Space
 #'
-#' \describe{
-#'  \item{spaces}{Retrieve all spaces in your digital ocean account}
-#'  \item{space_create}{Create a new space}
-#' }
-#' @name spaces
-#' @param name (character) Space name.
-#' @param spaces_key (character) String containing a spaces access key. If
-#'   missing, defaults to value stored in an environment variable
-#'   \code{DO_SPACES_ACCESS_KEY}.
-#' @param spaces_secret (character) String containing the secret associated
-#'   with the spaces key. If missing, defaults to value stored in an environment
-#'   variable \code{DO_SPACES_SECRET_KEY}.
-#' @param ... Additional arguments passed down to \code{\link[aws.s3]{bucketlist}},
-#'   \code{\link[aws.s3]{get_bucket}}, \code{\link[aws.s3]{put_bucket}} functions
-#'   from the \code{aws.s3} package.
-#' @examples \dontrun{
-#' # list spaces
-#' spaces()
+#' @template spaces_args
+#' @param ... Additional arguments to \code{\link[aws.s3]{s3HTTP}}
 #'
-#' # obtain spaces as a list of space objects
-#' res <- spaces()
-#'
-#' # print space summary using a space object
-#' summary(res[['my_space_name']])
-#'
-#' # create a new space
-#' space_create('new_space_name')
-#' }
+#' @return The raw S3 response, or throws an error
+spaces_GET <- function(spaces_region = NULL,
+                       spaces_key = NULL,
+                       spaces_secret = NULL, ...) {
 
-#' @importFrom aws.s3 bucketlist
-#' @keywords internal
-spaces_GET <- function(spaces_key = NULL, spaces_secret = NULL, ...) {
-
+  spaces_region <- check_space_region(spaces_region)
   spaces_key <- check_space_access(spaces_key)
   spaces_secret <- check_space_secret(spaces_secret)
 
-  res <- aws.s3::s3HTTP(verb = "GET",
-                        region = NULL,
-                        key = spaces_key,
-                        secret = spaces_secret,
-                        base_url = spaces_base,
-                        ...)
+  aws.s3::s3HTTP(verb = "GET",
+                 region = spaces_region,
+                 key = spaces_key,
+                 secret = spaces_secret,
+                 base_url = spaces_base,
+                 ...)
 
-  return(res)
 }
 
-#' @export
-#' @rdname spaces
-spaces <- function(spaces_key = NULL, spaces_secret = NULL, ...) {
-  res <- spaces_GET(spaces_key = spaces_key, spaces_secret = spaces_secret, ...)
 
-  # when only one space is present, res$Buckets only contains the Name and
-  # CreationDate.  If more than one space is present, then each space will
-  # have a Bucket list object with the Name and CreationDate
-  if (identical(names(res$Buckets), c("Name", "CreationDate"))) {
-    res$Buckets <- list(
-      Bucket = list(
-        Name = res$Buckets$Name,
-        CreationDate = res$Buckets$CreationDate
-      )
-    )
-  }
-  sp <- lapply(res$Buckets, structure, class = "space")
-  setNames(sp, vapply(res$Buckets, function(x) x$Name, character(1)))
-}
 
-#' @importFrom aws.s3 get_bucket
 #' @keywords internal
-space_info <- function(name, spaces_key = NULL, spaces_secret = NULL, ...) {
-  if (is.null(name)) stop("Please specify the space name")
+space_info <- function(name,
+                       spaces_region = NULL,
+                       spaces_key = NULL,
+                       spaces_secret = NULL,
+                       ...) {
+  name <- as.character(name)
+
+  spaces_region <- check_space_region(spaces_region)
   spaces_key <- check_space_access(spaces_key)
   spaces_secret <- check_space_secret(spaces_secret)
 
-  space_info <- get_bucket(name,
-                           region = NULL,
-                           check_region = FALSE,
-                           key = spaces_key,
-                           secret = spaces_secret,
-                           base_url = spaces_base,
-                           max = Inf,
-                           ...)
+  space_info <- aws.s3::get_bucket(name,
+                                   region = spaces_region,
+                                   check_region = FALSE,
+                                   key = spaces_key,
+                                   secret = spaces_secret,
+                                   base_url = spaces_base,
+                                   max = Inf,
+                                   ...)
 
   return(space_info)
 }
@@ -153,23 +200,4 @@ space_size <- function(space_info) {
 space_files <- function(space_info) {
   # remove entries with size 0 (those are nested directories)
   length(lapply(space_info, function(x) x[x$Size > 0]))
-}
-
-#' Create a new space
-#' @importFrom aws.s3 put_bucket
-#' @export
-#' @rdname spaces
-space_create <- function(name, spaces_key = NULL, spaces_secret = NULL, ...) {
-  if (is.null(name)) stop("Please specify the space name")
-  spaces_key <- check_space_access(spaces_key)
-  spaces_secret <- check_space_secret(spaces_secret)
-
-  res <- put_bucket(name,
-             region = NULL,
-             key = spaces_key,
-             secret = spaces_secret,
-             base_url = spaces_base,
-             ...)
-
-  if (res) message(sprintf("New space %s created successfully", name))
 }

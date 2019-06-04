@@ -4,6 +4,7 @@
 #' @inheritParams droplet_create
 #' @inheritParams droplets_create
 #' @return Two or more droplet objects
+#' @template dropid
 #' @examples
 #' \dontrun{
 #' # if no names given, creates two droplets with random names
@@ -14,7 +15,7 @@
 #' docklets_create(names = c('drop3', 'drop4'))
 #' }
 docklets_create <- function(names = NULL,
-                           size = getOption("do_size", "1gb"),
+                           size = getOption("do_size", "s-1vcpu-2gb"),
                            region = getOption("do_region", "sfo1"),
                            ssh_keys = getOption("do_ssh_keys", NULL),
                            backups = getOption("do_backups", NULL),
@@ -23,7 +24,7 @@ docklets_create <- function(names = NULL,
                              getOption("do_private_networking", NULL),
                            tags = NULL,
                            wait = TRUE,
-                           image = "docker",
+                           image = "docker-18-04",
                            ...) {
   droplets_create(
     names = names,

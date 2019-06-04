@@ -15,35 +15,39 @@
 \alias{docklet_shinyapp}
 \title{Docklets: docker on droplets.}
 \usage{
-docklet_create(name = random_name(), size = getOption("do_size", "1gb"),
-  region = getOption("do_region", "sfo1"),
+docklet_create(name = random_name(), size = getOption("do_size",
+  "s-1vcpu-2gb"), region = getOption("do_region", "sfo1"),
   ssh_keys = getOption("do_ssh_keys", NULL),
   backups = getOption("do_backups", NULL), ipv6 = getOption("do_ipv6",
   NULL), private_networking = getOption("do_private_networking", NULL),
-  tags = list(), wait = TRUE, image = "docker", ...)
+  tags = list(), wait = TRUE, image = "docker-18-04", ...)
 
 docklet_ps(droplet, all = TRUE, ssh_user = "root")
 
 docklet_images(droplet, all = TRUE, ssh_user = "root")
 
-docklet_pull(droplet, repo, ssh_user = "root")
+docklet_pull(droplet, repo, ssh_user = "root", keyfile = NULL,
+  ssh_passwd = NULL, verbose = FALSE)
 
-docklet_run(droplet, ..., rm = FALSE, name = NULL, ssh_user = "root")
+docklet_run(droplet, ..., rm = FALSE, name = NULL, ssh_user = "root",
+  keyfile = NULL, ssh_passwd = NULL, verbose = FALSE)
 
 docklet_stop(droplet, container, ssh_user = "root")
 
 docklet_rm(droplet, container, ssh_user = "root")
 
 docklet_docker(droplet, cmd, args = NULL, docker_args = NULL,
-  ssh_user = "root")
+  ssh_user = "root", keyfile = NULL, ssh_passwd = NULL,
+  verbose = FALSE)
 
-docklet_rstudio(droplet, user = "rstudio", password = "rstudio",
-  email = "rstudio@example.com", img = "rocker/rstudio", port = "8787",
-  volume = "", dir = "", browse = TRUE, add_users = FALSE,
-  ssh_user = "root")
+docklet_rstudio(droplet, user, password, email = "rstudio@example.com",
+  img = "rocker/rstudio", port = "8787", volume = "", dir = "",
+  browse = TRUE, add_users = FALSE, ssh_user = "root",
+  keyfile = NULL, ssh_passwd = NULL, verbose = FALSE)
 
-docklet_rstudio_addusers(droplet, user = "rstudio", password = "rstudio",
-  img = "rocker/rstudio", port = "8787")
+docklet_rstudio_addusers(droplet, user, password, img = "rocker/rstudio",
+  port = "8787", ssh_user = "root", keyfile = NULL,
+  ssh_passwd = NULL, verbose = FALSE)
 
 docklet_shinyserver(droplet, img = "rocker/shiny", port = "3838",
   volume = "", dir = "", browse = TRUE, ssh_user = "root")
@@ -60,7 +64,7 @@ determine the hostname for the Droplet in its internal configuration.
 Default: picks a random name from \code{\link{words}} if none supplied.}
 
 \item{size}{(character) Size slug identifier. See \code{\link{sizes}()} for
-a complete list. Default: 512mb, the smallest}
+a complete list. Default: s-1vcpu-2gb}
 
 \item{region}{(character) The unique slug identifier for the region that you
 wish to deploy in. See \code{\link{regions}()} for a complete list.
@@ -102,7 +106,7 @@ instead of outside of it.}
 \item{image}{(character/numeric) The image ID of a public or private image,
 or the unique slug identifier for a public image. This image will be the
 base image for your droplet. See \code{\link{images}()} for a complete
-list. Default: ubuntu-14-04-x64}
+list. Default: ubuntu-18-04-x64}
 
 \item{...}{For \code{docklet_create}, additional options passed down to
 \code{\link[httr]{POST}}. For \code{docklet_run}, additional arguments
@@ -119,6 +123,13 @@ Default: root}
 \item{repo}{(character) Docker name, can be local to the Droplet or remote,
 e.g., \code{rocker/rstudio}}
 
+\item{keyfile}{Optional private key file.}
+
+\item{ssh_passwd}{Optional passphrase or callback function for authentication.
+Refer to the \code{ssh::ssh_connect} documentation for more details.}
+
+\item{verbose}{If TRUE, will print command before executing it.}
+
 \item{rm}{(logical) Automatically remove the container when it exits.
 Default: \code{FALSE}}
 
@@ -131,11 +142,11 @@ to be unique)}
 
 \item{docker_args}{(character) Docker args}
 
-\item{user}{(character) User name. Default: \code{"rstudio"}}
+\item{user}{(character) User name. required.}
 
-\item{password}{(character) Password. Default: \code{"rstudio"}}
+\item{password}{(character) Password. required. can not be 'rstudio'}
 
-\item{email}{(character) Password. Default: \code{"rstudio@example.com"}}
+\item{email}{(character) E-mail address. Default: \code{"rstudio@example.com"}}
 
 \item{img}{(character) Docker image (not a DigitalOcean image). Default:
 \code{'rocker/rstudio'}}
@@ -168,9 +179,18 @@ IP address can most likely be found like \code{d$networks$v4[[1]]$ip_address}
 and the port is the port you set in the function call.
 }
 
+\section{Missing droplet ID}{
+
+If you get a droplet object back without an IP address, the IP
+address was not assigned when the payload was returned by DigitalOcean.
+Simply run \code{d <- droplet(d$id)} to update your droplet object and the IP
+address will populate.
+}
+
 \examples{
 \dontrun{
 d <- docklet_create()
+d <- droplet(d$id)
 d \%>\% docklet_pull("dockerpinata/sqlite")
 d \%>\% docklet_images()
 
@@ -193,7 +213,7 @@ d \%>\% docklet_run("rocker/r-ver:3.2", "R --version", rm = TRUE)
 d \%>\% docklet_run("rocker/r-ver:3.2", "Rscript -e '2 + 3'", rm = TRUE)
 
 # Run a docklet containing rstudio
-d \%>\% docklet_rstudio()
+d \%>\% docklet_rstudio(user = "foo", password = "bar")
 
 # Delete a droplet
 d \%>\% droplet_delete()
@@ -202,7 +222,9 @@ d \%>\% droplet_delete()
 ## This adds 100 users to the instance, with username/passwords
 ## following pattern user1/user1 ... through 100
 d <- docklet_create()
-d \%>\% docklet_rstudio() \%>\% docklet_rstudio_addusers()
+d <- droplet(d$id)
+d \%>\% docklet_rstudio(user = "foo", password = "bar") \%>\% 
+ docklet_rstudio_addusers(user = "foo", password = "bar")
 
 # Spin up a Shiny server (opens in default browser)
 (d <- docklet_create())
@@ -210,13 +232,13 @@ d \%>\% docklet_shinyserver()
 docklet_create() \%>\% docklet_shinyserver()
 
 # Spin up a Shiny server with an app (opens in default browser)
-d <- docklet_create()
+d <- docklet_create(); d <- droplet(d$id)
 path <- system.file("examples", "widgets", package = "analogsea")
 d \%>\% docklet_shinyapp(path)
 ## uploading more apps - use droplet_upload, then navigate in browser
 ### if you try to use docklet_shinyapp again on the same droplet, it will error
 path2 <- system.file("examples", "mpg", package = "analogsea")
-d \%>\% droplet_upload(path2, "/srv/shinyapps/mpg") # then go to browser
+d \%>\% droplet_upload(path2, "/srv/shinyapps") # then go to browser
 }
 }
 \seealso{

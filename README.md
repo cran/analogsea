@@ -7,7 +7,7 @@ analogsea
 [![rstudio mirror downloads](http://cranlogs.r-pkg.org/badges/analogsea)](https://github.com/metacran/cranlogs.app)
 [![cran version](http://www.r-pkg.org/badges/version/analogsea)](https://cran.r-project.org/package=analogsea)
 
-`analogsea` is an R client for version 2 of the [Digital Ocean API](https://developers.digitalocean.com/v2/). It allows you to programatically create and destroy droplets (remote computers), and install various R related tools: (these are still a work in progress):
+`analogsea` is an R client for version 2 of the [Digital Ocean API](https://developers.digitalocean.com/v2/).  See `?droplet_functions` after loading analogsea. It allows you to programatically create and destroy droplets (remote computers), and install various R related tools: (these are still a work in progress):
 
 * R (done)
 * RStudio Server (done)
@@ -88,7 +88,7 @@ droplet_create()
 ```
 
 ```r
-Using default ssh key: Scott Chamberlain
+Using default ssh key: Jane Doe
 NB: This costs $0.00744 / hour  until you droplet_delete() it
 <droplet>sabaoth (2727258)
   Status: new
@@ -129,9 +129,9 @@ docklet_create() %>%
   docklet_rstudio()
 ```
 
-This will install R, RStudio Server and it's dependencies. It will automatically pop open the RStudio server instance in your default browser, with default `username/password` of `rstudio/rstudio`.
+This will install R, RStudio Server and it's dependencies. It will automatically pop open the RStudio server instance in your default browser, with default `username/password` of `rstudio/server`.
 
 
 ## Meta
 
-Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+Please note that this project is released with a [Contributor Code of Conduct](https://github.com/sckott/analogsea/blob/master/CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.

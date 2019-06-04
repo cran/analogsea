@@ -4,14 +4,14 @@
 \alias{droplet_create}
 \title{Create a new droplet.}
 \usage{
-droplet_create(name = random_name(), size = getOption("do_size", "512mb"),
-  image = getOption("do_image", "ubuntu-14-04-x64"),
+droplet_create(name = random_name(), size = getOption("do_size",
+  "s-1vcpu-1gb"), image = getOption("do_image", "ubuntu-18-04-x64"),
   region = getOption("do_region", "sfo1"),
   ssh_keys = getOption("do_ssh_keys", NULL),
   backups = getOption("do_backups", NULL), ipv6 = getOption("do_ipv6",
   NULL), private_networking = getOption("do_private_networking", NULL),
-  tags = list(), user_data = NULL, cloud_config = NULL, wait = TRUE,
-  ...)
+  tags = list(), user_data = NULL, cloud_config = NULL,
+  wait = TRUE, ...)
 }
 \arguments{
 \item{name}{(character) Name of the droplet. The human-readable string you
@@ -22,12 +22,12 @@ determine the hostname for the Droplet in its internal configuration.
 Default: picks a random name from \code{\link{words}} if none supplied.}
 
 \item{size}{(character) Size slug identifier. See \code{\link{sizes}()} for
-a complete list. Default: 512mb, the smallest}
+a complete list. Default: s-1vcpu-1gb, the smallest}
 
 \item{image}{(character/numeric) The image ID of a public or private image,
 or the unique slug identifier for a public image. This image will be the
 base image for your droplet. See \code{\link{images}()} for a complete
-list. Default: ubuntu-14-04-x64}
+list. Default: ubuntu-18-04-x64}
 
 \item{region}{(character) The unique slug identifier for the region that you
 wish to deploy in. See \code{\link{regions}()} for a complete list.
@@ -90,6 +90,14 @@ Note that if you exit the R session or kill the function call
 after it's in waiting process (the string of ...), the droplet creation
 will continue.
 }
+\section{Missing droplet ID}{
+
+If you get a droplet object back without an IP address, the IP
+address was not assigned when the payload was returned by DigitalOcean.
+Simply run \code{d <- droplet(d$id)} to update your droplet object and the IP
+address will populate.
+}
+
 \examples{
 \dontrun{
 # by default we give your droplet a name
