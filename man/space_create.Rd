@@ -4,8 +4,13 @@
 \alias{space_create}
 \title{Create a new Space}
 \usage{
-space_create(name, spaces_region = NULL, spaces_key = NULL,
-  spaces_secret = NULL, ...)
+space_create(
+  name,
+  spaces_region = NULL,
+  spaces_key = NULL,
+  spaces_secret = NULL,
+  ...
+)
 }
 \arguments{
 \item{name}{(character) The name of the new Space}
@@ -22,7 +27,7 @@ missing, defaults to value stored in an environment variable
 with the spaces key. If missing, defaults to value stored in an environment
 variable \code{DO_SPACES_SECRET_KEY}.}
 
-\item{...}{Additional arguments to \code{\link[aws.s3]{put_bucket}}}
+\item{...}{Additional arguments to \code{aws.s3::put_bucket}}
 }
 \value{
 (character) The name of the created Space.

@@ -4,8 +4,7 @@
 \alias{spaces_GET}
 \title{Internal helper method to get information about a Space}
 \usage{
-spaces_GET(spaces_region = NULL, spaces_key = NULL,
-  spaces_secret = NULL, ...)
+spaces_GET(spaces_region = NULL, spaces_key = NULL, spaces_secret = NULL, ...)
 }
 \arguments{
 \item{spaces_region}{(character) String containing a spaces region. If
@@ -20,7 +19,7 @@ missing, defaults to value stored in an environment variable
 with the spaces key. If missing, defaults to value stored in an environment
 variable \code{DO_SPACES_SECRET_KEY}.}
 
-\item{...}{Additional arguments to \code{\link[aws.s3]{s3HTTP}}}
+\item{...}{Additional arguments to \code{aws.s3::s3HTTP}}
 }
 \value{
 The raw S3 response, or throws an error

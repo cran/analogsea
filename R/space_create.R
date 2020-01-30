@@ -3,7 +3,7 @@
 #' @export
 #' @param name (character) The name of the new Space
 #' @template spaces_args
-#' @param ... Additional arguments to \code{\link[aws.s3]{put_bucket}}
+#' @param ... Additional arguments to `aws.s3::put_bucket`
 #' @return (character) The name of the created Space.
 #' @examples
 #' \dontrun{
@@ -16,6 +16,8 @@ space_create <- function(name,
                          spaces_key = NULL,
                          spaces_secret = NULL,
                          ...) {
+  check_for_a_pkg("aws.s3")
+
   spaces_region <- check_space_region(spaces_region)
   spaces_key <- check_space_access(spaces_key)
   spaces_secret <- check_space_secret(spaces_secret)

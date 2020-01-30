@@ -15,45 +15,107 @@
 \alias{docklet_shinyapp}
 \title{Docklets: docker on droplets.}
 \usage{
-docklet_create(name = random_name(), size = getOption("do_size",
-  "s-1vcpu-2gb"), region = getOption("do_region", "sfo2"),
+docklet_create(
+  name = random_name(),
+  size = getOption("do_size", "s-1vcpu-2gb"),
+  region = getOption("do_region", "sfo2"),
   ssh_keys = getOption("do_ssh_keys", NULL),
-  backups = getOption("do_backups", NULL), ipv6 = getOption("do_ipv6",
-  NULL), private_networking = getOption("do_private_networking", NULL),
-  tags = list(), wait = TRUE, image = "docker-18-04", ...)
+  backups = getOption("do_backups", NULL),
+  ipv6 = getOption("do_ipv6", NULL),
+  private_networking = getOption("do_private_networking", NULL),
+  tags = list(),
+  wait = TRUE,
+  image = "docker-18-04",
+  ...
+)
 
 docklet_ps(droplet, all = TRUE, ssh_user = "root")
 
 docklet_images(droplet, all = TRUE, ssh_user = "root")
 
-docklet_pull(droplet, repo, ssh_user = "root", keyfile = NULL,
-  ssh_passwd = NULL, verbose = FALSE)
+docklet_pull(
+  droplet,
+  repo,
+  ssh_user = "root",
+  keyfile = NULL,
+  ssh_passwd = NULL,
+  verbose = FALSE
+)
 
-docklet_run(droplet, ..., rm = FALSE, name = NULL, ssh_user = "root",
-  keyfile = NULL, ssh_passwd = NULL, verbose = FALSE)
+docklet_run(
+  droplet,
+  ...,
+  rm = FALSE,
+  name = NULL,
+  ssh_user = "root",
+  keyfile = NULL,
+  ssh_passwd = NULL,
+  verbose = FALSE
+)
 
 docklet_stop(droplet, container, ssh_user = "root")
 
 docklet_rm(droplet, container, ssh_user = "root")
 
-docklet_docker(droplet, cmd, args = NULL, docker_args = NULL,
-  ssh_user = "root", keyfile = NULL, ssh_passwd = NULL,
-  verbose = FALSE)
+docklet_docker(
+  droplet,
+  cmd,
+  args = NULL,
+  docker_args = NULL,
+  ssh_user = "root",
+  keyfile = NULL,
+  ssh_passwd = NULL,
+  verbose = FALSE
+)
 
-docklet_rstudio(droplet, user, password, email = "rstudio@example.com",
-  img = "rocker/rstudio", port = "8787", volume = "", dir = "",
-  browse = TRUE, add_users = FALSE, ssh_user = "root",
-  keyfile = NULL, ssh_passwd = NULL, verbose = FALSE)
+docklet_rstudio(
+  droplet,
+  user,
+  password,
+  email = "rstudio@example.com",
+  img = "rocker/rstudio",
+  port = "8787",
+  volume = "",
+  dir = "",
+  browse = TRUE,
+  add_users = FALSE,
+  ssh_user = "root",
+  keyfile = NULL,
+  ssh_passwd = NULL,
+  verbose = FALSE
+)
 
-docklet_rstudio_addusers(droplet, user, password, img = "rocker/rstudio",
-  port = "8787", ssh_user = "root", keyfile = NULL,
-  ssh_passwd = NULL, verbose = FALSE)
+docklet_rstudio_addusers(
+  droplet,
+  user,
+  password,
+  img = "rocker/rstudio",
+  port = "8787",
+  ssh_user = "root",
+  keyfile = NULL,
+  ssh_passwd = NULL,
+  verbose = FALSE
+)
 
-docklet_shinyserver(droplet, img = "rocker/shiny", port = "3838",
-  volume = "", dir = "", browse = TRUE, ssh_user = "root")
+docklet_shinyserver(
+  droplet,
+  img = "rocker/shiny",
+  port = "3838",
+  volume = "",
+  dir = "",
+  browse = TRUE,
+  ssh_user = "root"
+)
 
-docklet_shinyapp(droplet, path, img = "rocker/shiny", port = "80",
-  dir = "", browse = TRUE, ssh_user = "root")
+docklet_shinyapp(
+  droplet,
+  path,
+  img = "rocker/shiny",
+  port = "80",
+  dir = "",
+  browse = TRUE,
+  ssh_user = "root"
+)
 }
 \arguments{
 \item{name}{(character) Name of the droplet. The human-readable string you
@@ -177,6 +239,24 @@ If you need to figure out the URL for your RStudio or Shiny server
 instance, you can construct like \code{http://<ip address>:<port>} where
 IP address can most likely be found like \code{d$networks$v4[[1]]$ip_address}
 and the port is the port you set in the function call.
+}
+
+\section{Managing Docker containers from R}{
+
+There's a few things to be note about managing Docker containers from
+analogsea:
+\itemize{
+\item To see running containers run \code{docklet_ps(d)}
+\item To get get logs run \code{droplet_ssh(d, "docker logs <container ID>")}
+\item To get a continuous feed of the logs run
+\code{droplet_ssh(d, "docker logs -f <container ID>")}
+\item Do not use \verb{docker exec -ti} as you do not want an interactive session -
+it will not work from within R. If you log into your DigitalOcean droplet
+you can do \verb{docker exec -ti}
+\item To install R package dependencies for a Shiny app, or similar, run
+\verb{droplet_ssh(d, "docker exec <ID> R -e 'install.packages(\\"pkg-name\\")'")}
+where \code{d} is your droplet object and \verb{<ID>} is the docker container ID
+}
 }
 
 \section{Missing droplet ID}{
