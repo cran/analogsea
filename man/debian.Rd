@@ -9,6 +9,7 @@
 \alias{debian_apt_get_update}
 \alias{debian_apt_get_install}
 \alias{install_r_package}
+\alias{install_github_r_package}
 \title{Helpers for managing a debian droplets.}
 \usage{
 debian_add_swap(droplet)
@@ -28,7 +29,13 @@ debian_apt_get_update(droplet)
 
 debian_apt_get_install(droplet, ...)
 
-install_r_package(droplet, package, repo = "http://cran.rstudio.com")
+install_r_package(droplet, package, repo = "https://cloud.r-project.org/")
+
+install_github_r_package(
+  droplet,
+  package,
+  repo = "https://cloud.r-project.org/"
+)
 }
 \arguments{
 \item{droplet}{A droplet, or object that can be coerced to a droplet

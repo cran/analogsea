@@ -326,10 +326,9 @@ droplet_upgrade <- function(droplet, ...) {
 droplet_action <- function(action, droplet, ...) {
   droplet <- as.droplet(droplet)
 
-  res <- do_POST(sprintf('droplets/%s/actions', droplet$id), query = list(
-    type = jsonlite::unbox(action),
-    ...)
-  )
+  res <- do_POST(sprintf('droplets/%s/actions', droplet$id),
+    httr::content_type_json(),
+    body = list(type = jsonlite::unbox(action), ...))
   as.action(res)
 }
 
@@ -508,8 +507,8 @@ droplet_actions <- function(droplet, actionid = NULL, ...) {
 #' neighbors()
 #' }
 neighbors <- function(...) {
-  res <- do_GET('reports/droplet_neighbors', ...)
-  res$droplets
+  res <- do_GET('reports/droplet_neighbors_ids', ...)
+  res$neighbor_ids
 }
 
 #' @export

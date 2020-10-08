@@ -1,3 +1,21 @@
+analogsea 0.9.0
+===============
+
+### NEW FEATURES
+
+* gains function `install_github_r_package()` for installing R packages from github on your droplet (#191) thanks @muschellij2
+
+### MINOR IMPROVEMENTS
+
+* `neighbors()` fxn fix: DigitalOcean updated the route used for neighbors information, and the returned named element in the response body (#186)
+
+### BUG FIXES
+
+* fix for `droplet_execute()` for running R on a droplet  (#193) (#195) thanks @pieterprovoost
+* fixed `droplet_action()` internal function - explicitly state the content type for each request - should affect many exported functions (#192)
+* fix for internal function `droplet_ip()`: we were sometimes extracting the private IP instead of the public IP address (#198) thanks @muschellij2
+
+
 analogsea 0.8.0
 ===============
 
@@ -101,8 +119,7 @@ analogsea 0.5.0
 
 * New function `docklets_create()` to create many docklets at once
 (similar to `droplets_create()`)  (#120)
-* New volumes methods for the new block storage (aka volumes)
-<https://www.digitalocean.com/products/storage/>: `volume`, `volume_action`,
+* New volumes methods for the new block storage (aka volumes): `volume`, `volume_action`,
 `volume_actions`, `volume_attach`, `volume_create`, `volume_delete`, `volume_detach`,
 `volume_resize`, `volume_snapshot_create`, `volume_snapshots`, `volumes`,
 `as.volume` (#121)
@@ -153,7 +170,6 @@ a bit for it to open (#113) thanks @fmichonneau @hrbrmstr
 Previously we pinged every second, meaning you could hit your API rate limit
 fastish. Now you can set an option `do.wait_time` to tweak time
 bewtween pings to check for droplet creation (or other actions).
-See <https://github.com/sckott/analogsea/issues/108#issuecomment-151519855>
 for example of doing droplet creation in parallel. (#108) thanks @simecek !
 * Fixed parsing bug in `sizes()` (#119)
 

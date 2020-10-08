@@ -23,11 +23,11 @@ NULL
 #' @export
 debian_add_swap <- function(droplet) {
   droplet_ssh(droplet,
-    "fallocate -l 4G /swapfile",
-    "chmod 600 /swapfile",
-    "mkswap /swapfile",
-    "sudo swapon /swapfile",
-    "sudo echo \"/swapfile   none    swap    sw    0   0\" >> /etc/fstab"
+              "fallocate -l 4G /swapfile",
+              "chmod 600 /swapfile",
+              "mkswap /swapfile",
+              "sudo swapon /swapfile",
+              "sudo echo \"/swapfile   none    swap    sw    0   0\" >> /etc/fstab"
   )
 }
 
@@ -86,8 +86,8 @@ debian_install_opencpu <- function(droplet, version = "1.5") {
 #' @export
 debian_apt_get_update <- function(droplet) {
   droplet_ssh(droplet,
-    "sudo apt-get update -qq",
-    "sudo apt-get upgrade -y"
+              "sudo apt-get update -qq",
+              "sudo apt-get upgrade -y"
   )
 }
 
@@ -96,7 +96,7 @@ debian_apt_get_update <- function(droplet) {
 #' @param ... Arguments to apt-get install.
 debian_apt_get_install <- function(droplet, ...) {
   droplet_ssh(droplet,
-    paste0("sudo apt-get install -y --force-yes ", paste(..., collapse = " "))
+              paste0("sudo apt-get install -y --force-yes ", paste(..., collapse = " "))
   )
 }
 
@@ -106,8 +106,50 @@ debian_apt_get_install <- function(droplet, ...) {
 #' @export
 #' @param package Name of R package to install.
 #' @param repo CRAN mirror to use.
-install_r_package <- function(droplet, package, repo = "http://cran.rstudio.com") {
+install_r_package <- function(droplet, package, repo = "https://cloud.r-project.org/") {
   droplet_ssh(droplet,
-    sprintf("Rscript -e \"install.packages(\'%s\', repos=\'%s/\')\"", package, repo)
+              sprintf("Rscript -e \"install.packages(\'%s\', repos=\'%s/\')\"", package, repo)
   )
+}
+
+#' @rdname debian
+#' @export
+#' @param package Name of R package to install.
+#' @param repo CRAN mirror to use.
+install_github_r_package <- function(droplet, package, repo = "https://cloud.r-project.org/") {
+  tf <- tempdir()
+  randName <- paste(sample(c(letters, LETTERS), size = 10,
+                           replace = TRUE), collapse = "")
+  tff <- file.path(tf, randName)
+  on.exit({
+    if (file.exists(tff)) {
+      file.remove(tff)
+    }
+  })
+  command = "Rscript -e \"cat(requireNamespace('remotes', quietly = TRUE))\""
+  droplet_ssh(droplet, paste0(command, " > /tmp/",
+                                         randName), verbose = FALSE)
+  droplet_download(droplet, paste0("/tmp/", randName),
+                              tf, verbose = FALSE)
+  droplet_ssh(droplet, paste0("rm /tmp/", randName),
+                         verbose = FALSE)
+
+  have_remotes <- readLines(tff, warn = FALSE)
+  if (length(have_remotes) == 1) {
+    if (have_remotes %in% c("TRUE", "FALSE")) {
+      have_remotes = as.logical(have_remotes)
+    } else {
+      have_remotes = FALSE
+    }
+  } else {
+    have_remotes = FALSE
+  }
+  if (!have_remotes) {
+    install_r_package(droplet, "remotes", repo = repo)
+  }
+
+ droplet_ssh(
+    droplet,
+    sprintf("Rscript -e \"remotes::install_github('%s')\"",
+            package))
 }
