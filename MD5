@@ -1,14 +1,14 @@
-41655a8cf6986e186bd04507cc89e0d1 *DESCRIPTION
-35bd8606c71dfbfad3ad27387e177ad4 *LICENSE
+8698e8c51875bd6aaf6365ba8f020676 *DESCRIPTION
+e34152a5351f580b172ee7093ca84124 *LICENSE
 959c7f74df50a87d7495507eb0e0b551 *NAMESPACE
-cb2b10104b2cad34c2a97dc0e2cde21d *NEWS.md
+c806a0d9e00eacce6f74958b407f7c28 *NEWS.md
 219c0f2580c208fbf64695cf87a44edb *R/account.R
 c1be78ff40e4283bf44aa726e5f5c15d *R/actions.R
 e613a0399269f42e3140eeb2ccbf7f42 *R/analogsea-package.R
 9d64b31abd31c49fb2a84541869da16b *R/certificates.R
 46c303f0dac7bbe373e306863d4f1680 *R/cloud_config.R
 2fcc05fbba14b0d04814c9b7615f8579 *R/data.R
-5332ebc5e5582a710a2cd9a3199dcffc *R/debian.R
+5ca83872338434fe4c049ab4a93bed01 *R/debian.R
 34cb3f40aa8a65e77af1c922ce8423df *R/deprecated_defunct.R
 96e9bee18af7d94051ed402795172d17 *R/do_oauth.R
 47925977575ad1c7bef7dae7223d7bb0 *R/do_options.R
@@ -47,7 +47,6 @@ f583f5b5856f7cb5f2c5fbb04f39f8a8 *R/utils.R
 a0d11466e0725e38b24fdcf97945e7b8 *R/volume-actions.R
 c6a54bf76f91ab5ca8ec4ba1bffd05d7 *R/volumes.R
 47dd709733d386e4d29adaca161125e2 *R/zzz.R
-d2a3ded5cd88ec6d7bdd7f03db08b65d *README.md
 1e39b866f3805b1b298ad9a7d8a5b3c5 *inst/cloudconfig/ubuntu.yaml
 00a88b6c31a74461d091e7c924e02710 *inst/examples/mpg/DESCRIPTION
 9ecc57ace7f7c6e7616740bf06cce2d8 *inst/examples/mpg/Readme.md
@@ -71,7 +70,7 @@ e1df8622dc1c922185b4595c38c595e7 *man/as.space.Rd
 abf717d77780fd591915e97608ecd24a *man/certificate_delete.Rd
 decc2609c4af19996fec2f80fb59cad0 *man/certificates.Rd
 b3153211a2e369bad30f9603fa6f3119 *man/cloud_config.Rd
-407daade67c1825e8a6ea2d717755231 *man/debian.Rd
+304d107ddcd24e82861efb24c2d6548f *man/debian.Rd
 9148be6e7f0ebe29de855d15f196375d *man/do_oauth.Rd
 73f2f253e4a1f6b2ec0da4a457a3c9a5 *man/do_options.Rd
 0fd24ee458781310348b14355b73c80a *man/docklet_create.Rd
