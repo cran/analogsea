@@ -8,8 +8,6 @@
 \alias{debian_install_shiny}
 \alias{debian_apt_get_update}
 \alias{debian_apt_get_install}
-\alias{install_r_package}
-\alias{install_github_r_package}
 \title{Helpers for managing a debian droplets.}
 \usage{
 debian_add_swap(
@@ -65,26 +63,6 @@ debian_apt_get_install(
   ssh_passwd = NULL,
   verbose = FALSE
 )
-
-install_r_package(
-  droplet,
-  package,
-  repo = "https://cloud.r-project.org/",
-  user = "root",
-  keyfile = NULL,
-  ssh_passwd = NULL,
-  verbose = FALSE
-)
-
-install_github_r_package(
-  droplet,
-  package,
-  repo = "https://cloud.r-project.org/",
-  user = "root",
-  keyfile = NULL,
-  ssh_passwd = NULL,
-  verbose = FALSE
-)
 }
 \arguments{
 \item{droplet}{A droplet, or object that can be coerced to a droplet
@@ -107,10 +85,6 @@ details.}
 \item{version}{Version of rstudio to install.}
 
 \item{...}{Arguments to apt-get install.}
-
-\item{package}{Name of R package to install.}
-
-\item{repo}{CRAN mirror to use.}
 }
 \description{
 Helpers for managing a debian droplets.

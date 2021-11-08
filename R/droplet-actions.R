@@ -16,7 +16,8 @@
 #' @param image (character/numeric) The image ID of a public or private image,
 #'   or the unique slug identifier for a public image. This image will be the
 #'   base image for your droplet. See \code{\link{images}()} for a complete
-#'   list. Default: ubuntu-18-04-x64
+#'   list. Use rstudio-20-04 for a DigitalOcean Marketplace image with R and
+#'   Tidyverse readily available. Default: ubuntu-18-04-x64
 #' @param region (character) The unique slug identifier for the region that you
 #'   wish to deploy in. See \code{\link{regions}()} for a complete list.
 #'   Default: sfo3
@@ -100,7 +101,7 @@ droplet_create <- function(name = random_name(),
   ssh_keys <- standardise_keys(ssh_keys)
   if (length(ssh_keys) == 0) {
     warning("You have not specified any ssh_keys. This is NOT recommended.",
-      " (You will receive an email with the root password in a few minutes",
+      " (You will receive an email with the root password in a few minutes)",
       call. = FALSE)
   }
 
@@ -128,16 +129,15 @@ droplet_create <- function(name = random_name(),
                    user_data = unbox(user_data)
                  ), ...
   )
-  droplet <- droplet(res$droplet$id)
-
-  message("NB: This costs $", droplet$size$price_hourly, " / hour ",
+  dres <- droplet(res$droplet$id)
+  message("NB: This costs $", dres$size$price_hourly, " / hour ",
           "until you droplet_delete() it")
 
   if (wait) {
-    droplet_wait(droplet)
-    droplet
+    droplet_wait(dres)
+    droplet(dres$id)
   } else {
-    droplet
+    droplet(dres$id)
   }
 }
 
@@ -391,7 +391,7 @@ droplet_change_kernel <- function(droplet, kernel, ...) {
 #' \describe{
 #' \item{snapshot}{Take a snapshot of the droplet once it has been powered
 #'   off, which can later be restored or used to create a new droplet from
-#'   the same image. Please be aware this may cause a reboot.}
+#'   the same image.}
 #' \item{snapshots_list}{List available snapshots}
 #' \item{backups_list}{List available snapshots}
 #' \item{restore}{Restore a droplet with a previous image or snapshot.
@@ -405,6 +405,9 @@ droplet_change_kernel <- function(droplet, kernel, ...) {
 #' create. If not set, the  snapshot name will default to the current date/time
 #' @param image (optional) The image ID of the backup image that you would like
 #' to restore.
+#' @param wait If \code{TRUE} (default), wait until the snapshot has been
+#' completed and is ready for use. If set to \code{FALSE} we return a
+#' droplet object right away after droplet snapshot request has been sent.
 #' @param ... Additional options passed down to \code{\link[httr]{POST}}
 #' @examples \dontrun{
 #' d <- droplet_create()
@@ -412,21 +415,30 @@ droplet_change_kernel <- function(droplet, kernel, ...) {
 #' d %>% droplet_backups_list()
 #'
 #' d %>%
-#'   droplet_power_off() %>%
 #'   droplet_snapshot() %>%
 #'   droplet_power_on() %>%
 #'   droplet_snapshots_list()
 #'
 #' # To delete safely
 #' d %>%
-#'   droplet_power_off() %>%
 #'   droplet_snapshot() %>%
 #'   droplet_delete() %>%
 #'   action_wait()
 #' }
 #' @export
-droplet_snapshot <- function(droplet, name = NULL, ...) {
+droplet_snapshot <- function(droplet, name = NULL, wait = TRUE, ...) {
+  droplet_status <- droplet$status
+  droplet_power_off(droplet)
+  droplet_wait(droplet)
+
   droplet_action("snapshot", droplet, name = name, ...)
+
+  if (wait) {
+    droplet_wait(droplet)
+    droplet
+  } else {
+    droplet
+  }
 }
 
 #' @export
@@ -518,4 +530,30 @@ droplet_neighbors <- function(droplet, ...) {
 
   res <- do_GET(sprintf('droplets/%s/neighbors', droplet$id), ...)
   res$droplets
+}
+
+#' Get droplet's IP address
+#'
+#' @export
+#' @inheritParams droplet_delete
+#' @examples \dontrun{
+#' # Obtain the droplet's IP as a string
+#' my_droplet <- droplet_create("demo", region = "sfo3")
+#' droplet_ip(my_droplet)
+#' }
+droplet_ip <- function(droplet) {
+  v4 <- droplet$networks$v4
+  if (length(v4) == 0) {
+    stop("No network interface registered for this droplet\n  Try refreshing like: droplet(d$id)",
+         call. = FALSE
+    )
+  }
+  ips <- do.call("rbind", lapply(v4, as.data.frame))
+  public_ip <- ips$type == "public"
+  if (!any(public_ip)) {
+    ip <- v4[[1]]$ip_address
+  } else {
+    ip <- ips$ip_address[public_ip][[1]]
+  }
+  ip
 }

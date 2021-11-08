@@ -1,3 +1,26 @@
+analogsea 1.0.2
+===============
+
+### NEW FEATURES
+
+* `droplet_create()` captures the droplet status and IP for immediate use without
+additional steps such as status update.
+* adds `droplet_ip()` function to avoid cumbersome writing to obtain droplet's IP
+
+analogsea 1.0.1
+===============
+
+### NEW FEATURES
+
+* The new referral link provides 100 USD in credits for end users instead of 10.
+* Uses Ubuntu machines by default.
+* Benefits from CRAN mirror hosted on DigitalOcean data center.
+* Extended battery of unit tests for droplet creation, installing packages, etc. @pachadotdev
+
+### MINOR IMPROVEMENTS
+
+* The documentation now mentions how use the RStudio Server image from DigitalOcean Marketplace.
+
 analogsea 1.0.0
 ===============
 
