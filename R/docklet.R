@@ -56,11 +56,11 @@
 #' instance, you can construct like \code{http://<ip address>:<port>} where
 #' IP address can most likely be found like \code{d$networks$v4[[1]]$ip_address}
 #' and the port is the port you set in the function call.
-#' 
+#'
 #' @section Managing Docker containers from R:
 #' There's a few things to be note about managing Docker containers from
 #' analogsea:
-#' 
+#'
 #' - To see running containers run `docklet_ps(d)`
 #' - To get get logs run `droplet_ssh(d, "docker logs <container ID>")`
 #' - To get a continuous feed of the logs run
@@ -71,7 +71,7 @@
 #' - To install R package dependencies for a Shiny app, or similar, run
 #' `droplet_ssh(d, "docker exec <ID> R -e 'install.packages(\"pkg-name\")'")`
 #' where `d` is your droplet object and `<ID>` is the docker container ID
-#'  
+#'
 #' @template dropid
 #'
 #' @examples
@@ -137,7 +137,8 @@ docklet_create <- function(name = random_name(),
                              getOption("do_private_networking", NULL),
                            tags = list(),
                            wait = TRUE,
-                           image = "docker-18-04",
+                           image = "docker-20-04",
+                           keyfile = NULL,
                            ...) {
   droplet_create(
     name = name,
@@ -298,10 +299,11 @@ docklet_shinyserver <- function(droplet,
                             volume = '',
                             dir = '',
                             browse = TRUE,
-                            ssh_user = "root") {
+                            ssh_user = "root",
+                            keyfile = NULL) {
   droplet <- as.droplet(droplet)
 
-  docklet_pull(droplet, img, ssh_user)
+  docklet_pull(droplet, img, ssh_user, keyfile = keyfile)
   docklet_run(droplet,
               " -d",
               " -p ", paste0(port, ":3838"),
@@ -309,7 +311,8 @@ docklet_shinyserver <- function(droplet,
               cn(" -w", dir),
               " ",
               img,
-              ssh_user = ssh_user
+              ssh_user = ssh_user,
+              keyfile = keyfile
   )
 
   url <- sprintf("http://%s:%s/", droplet_ip(droplet), port)
@@ -329,14 +332,15 @@ docklet_shinyapp <- function(droplet,
                              port = '80',
                              dir = '',
                              browse = TRUE,
-                             ssh_user = "root") {
+                             ssh_user = "root",
+                             keyfile = NULL) {
   check_for_a_pkg("ssh")
   droplet <- as.droplet(droplet)
   # move files to server
-  droplet_ssh(droplet, "mkdir -p /srv/shinyapps")
-  droplet_upload(droplet, path, "/srv/shinyapps/")
+  droplet_ssh(droplet, "mkdir -p /srv/shinyapps", keyfile = keyfile)
+  droplet_upload(droplet, path, "/srv/shinyapps/", keyfile = keyfile)
   # spin up shiny server
-  docklet_shinyserver(
-    droplet, img, port, volume = '/srv/shinyapps/:/srv/shiny-server/',
-                      dir, browse, ssh_user)
+  docklet_shinyserver(droplet, img, port, 
+                      volume = '/srv/shinyapps/:/srv/shiny-server/',
+                      dir, browse, ssh_user, keyfile)
 }
