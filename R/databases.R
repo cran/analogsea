@@ -17,186 +17,57 @@ databases <- function(page = 1, per_page = 25, ...) {
   databases <- res$databases
   
   d <- data.frame(
-    slug = vapply(
-      pluck(databases, "slug"), function(x) if (is.null(x)) "" else x, character(1)),
-    memory = pluck(databases, "memory", numeric(1)),
-    vcpus = pluck(databases, "vcpus", numeric(1)),
-    disk = pluck(databases, "disk", numeric(1)),
-    transfer = pluck(databases, "transfer", numeric(1)),
-    price_monthly = pluck(databases, "price_monthly", numeric(1)),
-    price_hourly = pluck(databases, "price_hourly", numeric(1)),
-    available = pluck(databases, "available", logical(1)),
-    region = vapply(databases, function(x) paste0(sort(unlist(x$regions) %||% ""),
-                                                  collapse = ", "),
-                    character(1)),
-    stringsAsFactors = FALSE
+    id = pluck(databases, "id", character(1)),
+    name = pluck(databases, "name", character(1)),
+    engine = pluck(databases, "engine", character(1)),
+    version = pluck(databases, "version", character(1)),
+    protocol = pluck(databases, "version", character(1)),
+    
+    connection_uri = pluck(pluck(databases, "connection"), "uri", character(1)),
+    connection_database = pluck(pluck(databases, "connection"), "database", character(1)),
+    connection_host = pluck(pluck(databases, "connection"), "host", character(1)),
+    connection_port = pluck(pluck(databases, "connection"), "port", integer(1)),
+    connection_user = pluck(pluck(databases, "connection"), "user", character(1)),
+    connection_password = pluck(pluck(databases, "connection"), "password", character(1)),
+    connection_ssl = pluck(pluck(databases, "connection"), "ssl", logical(1)),
+    
+    private_connection_uri = pluck(pluck(databases, "private_connection"), "uri", character(1)),
+    private_connection_database = pluck(pluck(databases, "private_connection"), "database", character(1)),
+    private_connection_host = pluck(pluck(databases, "private_connection"), "host", character(1)),
+    private_connection_port = pluck(pluck(databases, "private_connection"), "port", integer(1)),
+    private_connection_user = pluck(pluck(databases, "private_connection"), "user", character(1)),
+    private_connection_password = pluck(pluck(databases, "private_connection"), "password", character(1)),
+    private_connection_ssl = pluck(pluck(databases, "private_connection"), "ssl", logical(1)),
+    
+    users_name = paste(sort(unlist(lapply(databases, function(x) {
+      lapply(x$users, function(y) y$name) 
+    })) %||% ""), collapse = ", "),
+    users_password = paste(sort(unlist(lapply(databases, function(x) {
+      lapply(x$users, function(y) y$role) 
+    })) %||% ""), collapse = ", "),
+    users_password = paste(sort(unlist(lapply(databases, function(x) {
+      lapply(x$users, function(y) y$password) 
+    })) %||% ""), collapse = ", "),
+    
+    db_names = paste(sort(unlist(lapply(databases, function(x) x$db_names)) %||% ""),
+                     collapse = ", "),
+    
+    num_nodes = pluck(databases, "num_nodes", integer(1)),
+    region = pluck(databases, "region", character(1)),
+    status = pluck(databases, "status", character(1)),
+    created_at = pluck(databases, "created_at", character(1)),
+    
+    maintenance_window_day = pluck(pluck(databases, "maintenance_window"), "day", character(1)),
+    maintenance_window_hour = pluck(pluck(databases, "maintenance_window"), "hour", character(1)),
+    maintenance_window_pending = pluck(pluck(databases, "maintenance_window"), "pending", logical(1)),
+    
+    size = pluck(databases, "size", character(1)),
+    tags = paste(sort(unlist(lapply(databases, function(x) x$tags)) %||% ""),
+          collapse = ", "),
+    private_network_uuid = pluck(databases, "private_network_uuid", character(1)),
+    project_id = pluck(databases, "project_id", character(1))
   )
   
   class(d) <- c("tbl_df", "tbl", "data.frame")
   return(d)
-}
-
-#' @param x Object to coerce to an database
-#' @export
-#' @rdname databases
-as.database <- function(x) UseMethod("as.database")
-#' @export
-as.database.list <- function(x) list_to_object(x, "database")
-#' @export
-as.database.database <- function(x) x
-#' @export
-as.database.numeric <- function(x) database(x)
-#' @export
-as.database.character <- function(x) {
-  if (!grepl("[A-Za-z0-9]+-[A-Za-z0-9]+-[A-Za-z0-9]+-[A-Za-z0-9]+-[A-Za-z0-9]+",
-             x)) {
-    databases()[[x]]
-  } else {
-    vv <- databases()
-    vv[[which(
-      x == unname(vapply(vv, "[[", "", "id"))
-    )]]
-  }
-}
-
-#' Block storage operations
-#'
-#' \describe{
-#'  \item{database}{get a single database}
-#'  \item{databases}{list databases}
-#'  \item{database_create}{create a database}
-#'  \item{database_snapshot_create}{create a snapshot of a database}
-#'  \item{database_snapshots}{list snapshots for a database}
-#'  \item{database_delete}{delete a database}
-#' }
-#'
-#' @param database A database, or something that can be coerced to a database by
-#'   \code{\link{as.database}}.
-#' @param name (character) Name of the new database. required.
-#' @param size (integer) The size of the Block Storage database in GiB
-#' @param description (character) An optional free-form text field to describe
-#' a Block Storage database.
-#' @param region (character) The region where the Block Storage database will
-#' be created. When setting a region, the value should be the slug identifier
-#' for the region. When you query a Block Storage database, the entire region
-#' object will be returned. Should not be specified with a snapshot_id.
-#' Default: nyc1
-#' @param snapshot_id (integer) The unique identifier for the database snapshot
-#' from which to create the database. Should not be specified with a region_id.
-#' @param engine (character) The name of the engine type to be
-#' used on the database. When provided, the database will be
-#' created with the specified backend type. Currently, the available
-#' options are "pg", "mysql", "redis" and "mongodb".
-#' @param tags (character) tag names to apply to the database after it is created.
-#' Tag names can either be existing or new tags.
-#' @param ... Additional options passed down to \code{\link[httr]{GET}},
-#' \code{\link[httr]{POST}}, etc.
-#' @details  note that if you delete a database, and it has a snapshot, the
-#' snapshot still exists, so beware
-#' @examples \dontrun{
-#' # list databases
-#' databases()
-#'
-#' # create a database
-#' vol1 <- database_create('testing', 5)
-#' vol2 <- database_create('foobar', 6, tags = c('stuff', 'things'))
-#'
-#' # create snapshot of a database
-#' xx <- database_snapshot_create(vol2, "howdy")
-#'
-#' # list snaphots for a database
-#' database_snapshots(xx)
-#'
-#' # list databases again
-#' res <- databases()
-#'
-#' # get a single database
-#' ## a whole database class object
-#' database(res$testing)
-#' ## by id
-#' database(res[[1]]$id)
-#' ## by name
-#' database(res[[1]]$name)
-#'
-#' # delete a database
-#' ## a whole database class object
-#' database_delete(res$testing)
-#' ## by id
-#' database_delete(res[[1]]$id)
-#' ## by name
-#' database_delete(res[[1]]$name)
-#'
-#' # delete many databases
-#' lapply(databases(), database_delete)
-#' }
-
-#' @export
-#' @rdname databases
-databases <- function(...) {
-  res <- do_GET('databases', ...)
-  as.database(res)
-}
-
-#' @export
-#' @rdname databases
-database <- function(database, ...) {
-  vol <- as.database(database)
-  res <- do_GET(database_url(vol$id), ...)
-  list_to_object(res, "database")
-}
-
-#' @export
-#' @rdname databases
-database_create <- function(name, size, description = NULL, region = 'nyc1',
-                          snapshot_id = NULL, engine = NULL,
-                          tags = NULL, ...) {
-  body <- ascompact(list(name = name, size_gigabytes = size,
-                         description = description, region = region, snapshot_id = snapshot_id,
-                         engine = engine,
-                         tags = tags))
-  as.database(do_POST("databases", ..., body = body))
-}
-
-#' @export
-#' @rdname databases
-database_snapshot_create <- function(database, name, ...) {
-  vol <- as.database(database)
-  res <- do_POST(sprintf("databases/%s/snapshots", vol$id), ...,
-                 body = list(name = name))
-  list_to_object(res, "snapshot", class = "database_snapshot")
-}
-
-#' @export
-#' @rdname databases
-database_snapshots <- function(database, ...) {
-  vol <- as.database(database)
-  res <- do_GET(sprintf("databases/%s/snapshots", vol$id), ...)
-  list_to_object(res, "snapshot", class = "database_snapshot")
-}
-
-#' @export
-#' @rdname databases
-database_delete <- function(database, ...) {
-  vol <- as.database(database)
-  do_DELETE(paste0('databases/', vol$id), ...)
-}
-
-
-#' @export
-print.database <- function(x, ...) {
-  cat("<database> ", x$name, " (", x$id, ")", "\n", sep = "")
-  cat("  Descr.:    ", x$description, "\n")
-  cat("  Region:    ", x$region$slug, "\n")
-  cat("  Size (GB): ", x$size_gigabytes, "\n")
-  cat("  Created:   ", x$created_at, "\n")
-}
-
-#' @export
-print.database_snapshot <- function(x, ...) {
-  cat("<database - snapshot> ", x$name, " (", x$id, ")", "\n", sep = "")
-  cat("  Regions:             ", paste0(unlist(x$regions), collapse = ", "),
-      "\n")
-  cat("  Min. Disk Size (GB): ", x$min_disk_size, "\n")
-  cat("  Size (GB):           ", x$size_gigabytes, "\n")
-  cat("  Created:             ", x$created_at, "\n")
 }

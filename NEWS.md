@@ -1,10 +1,20 @@
+analogsea 1.0.7
+===============
+
+### NEW FEATURES
+
+* Added databases() function, which does the same as droplets()
+  but for managed databases.
+* Offers link with 100 dollars in promotional credits.
+* Fixes authentication issues when creating keys.
+* Method `as.url.domain` supports additional arguments.
+
 analogsea 1.0.6
 ===============
 
 ### NEW FEATURES
 
-* `docklet_create()`, `docklet_shinyserver()` and `docklet_shinyapp()` now allow
-  to specify the ssh key location.
+* `docklet_create()`, `docklet_shinyserver()` and `docklet_shinyapp()` now allow to specify the ssh key location.
 
 ### FEATURE FIXES
 

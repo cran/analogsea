@@ -1,10 +1,9 @@
 Package: analogsea
-Title: Interface to 'Digital Ocean'
-Description: Provides a set of functions for interacting with the 'Digital
-    Ocean' API <https://www.digitalocean.com/>, including
-    creating images, destroying them, rebooting, getting details on regions, and
-    available images.
-Version: 1.0.6
+Title: Interface to 'DigitalOcean'
+Description: Provides a set of functions for interacting with the 'DigitalOcean'
+    API <https://www.digitalocean.com/>, including creating images, destroying 
+    them, rebooting, getting details on regions, and available images.
+Version: 1.0.7.2
 Authors@R: c(
     person("Scott", "Chamberlain", role = "aut",
         email = "myrmecocystus@gmail.com",
@@ -28,9 +27,9 @@ Language: en-US
 Imports: stats, utils, httr (>= 1.2.0), jsonlite (>= 1.1), magrittr,
         yaml
 Suggests: testthat, knitr, ssh (>= 0.6), aws.s3, arrow
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2022-05-08 17:09:29 UTC; pacha
+Packaged: 2023-04-19 19:23:30 UTC; pacha
 Author: Scott Chamberlain [aut] (<https://orcid.org/0000-0003-1444-9135>),
   Hadley Wickham [aut],
   Winston Chang [aut],
@@ -41,4 +40,4 @@ Author: Scott Chamberlain [aut] (<https://orcid.org/0000-0003-1444-9135>),
   DigitalOcean [cph]
 Maintainer: Mauricio Vargas <mavargas11@uc.cl>
 Repository: CRAN
-Date/Publication: 2022-05-08 17:30:02 UTC
+Date/Publication: 2023-04-19 19:50:02 UTC
